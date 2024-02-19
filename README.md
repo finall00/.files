@@ -6,3 +6,6 @@ configurações do vim e tmux
 ```
 git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm
 ```
+
+
+> dar uma olhada no vimspector 
