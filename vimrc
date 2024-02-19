@@ -110,6 +110,7 @@ Plug 'SirVer/ultisnips'
 Plug 'honza/vim-snippets'
 Plug 'junegunn/fzf', { 'dir': '~/.fzf', 'do': './install --all' }
 Plug 'junegunn/fzf.vim'
+Plug 'shime/vim-livedown'
 
 call plug#end()
 
@@ -132,6 +133,9 @@ let g:UltiSnipsSnippetDirectories=["UltiSnips", "my_custom_snippets", "python"]
 
 " fzf config
 nnoremap <C-p> :FZF<cr>
+
+"livedown
+nnoremap <C-S-m> :LivedownToggle<CR>
 " ----------------------------------------------------------------------------
 "Comando e atalhos
 
