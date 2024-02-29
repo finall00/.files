@@ -10,13 +10,12 @@ endif
 "--------general------------------------------------------------------------------------
 
 set title
-set backspace= indent, eol, start
-set history= 1000
+set backspace=indent,eol,start
 set showcmd
 set gcr=a:blinkon0
 set autoread
 
-set guifont=FiraCode\ Nerd\ Font Mono:h12
+set guifont=FiraCode\ Nerd\ Font\ Mono:h12
 set visualbell
 set hidden
 set confirm
@@ -25,8 +24,7 @@ set splitright
 set mouse=a
 set hidden
 set clipboard=unnamedplus
-set fillchars=vert:|,fold:-,eob:~,lastline:@
-
+set fillchars=vert:│,fold:-,eob:~,lastline:@
 syntax on 
 
 let mapleader = ";"
@@ -84,6 +82,22 @@ set wildmenu
 set wildmode=longest,full
 set wildoptions=pum
 
+" -----------------------------------------------------------------------------
+hi Normal guibg=NONE ctermbg=NONE
+
+hi CursorLine guibg=#202130
+
+hi Comment cterm=italic gui=italic
+
+hi VertSplit ctermbg=NONE guibg=NONE ctermfg=7 guifg=#c1c2d0
+
+hi TabLine      guifg=#9192a0 guibg=#303140 gui=none
+hi TabLineSel   guifg=#a1a2b0 guibg=#101120 gui=bold
+hi TabLineFill  guifg=#9192a0 guibg=#303140 gui=none
+
+hi Visual guifg=NONE guibg=#303140
+
+
 "-----------------------------------------------------------------------------
 "identation
 set autoindent
@@ -127,14 +141,11 @@ Plug 'shime/vim-livedown'
 Plug 'junegunn/vim-easy-align'
 Plug 'neoclide/coc.nvim', {'branch': 'release'}
 
+
 ":CocInstall coc-json coc-tsserver
 "https://javadev.org/devtools/ide/neovim/coc/
 
 "adicionar plugins para java e rust 
-
-"https://github.com/artur-shaik/vim-javacomplete2
-"add coc.nvim
-"https://github.com/neoclide/coc-java
 
 "Java
 Plug 'artur-shaik/vim-javacomplete2'
@@ -175,6 +186,7 @@ let g:airline_powerline_fonts = 1
 let g:airline_statusline_ontop=0
 let g:airline_theme='base16_classic_dark'
 let g:airline#extensions#tabline#formatter = 'default'
+let g:airline#extensions#whitespace#enabled = 0
 
 " Configuração do UltiSnips
 let g:UltiSnipsExpandTrigger="<tab>"
@@ -330,4 +342,3 @@ vmap <leader>pby :w !pbcopy<CR><CR>
 noremap <leader>aa :call VimuxRunCommand("clear; bundle exec rake test")<CR>
 noremap <leader>ai :call VimuxRunCommand("clear; bundle exec ruby -r ./test/test_helper " . bufname("%"))<CR>
 noremap <leader>ae :call VimuxRunCommand("clear; bundle exec rake e2e")<CR>
-
