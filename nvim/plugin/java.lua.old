@@ -1,0 +1,160 @@
+local home= os.getenv('HOME')
+local jdtls = require('jdtls')
+local jdtls_home = '~/.local/share/nvim/mason/packages/jdtls/'
+
+-- Tipos de arquivos que indicam o diretório raiz de um projeto Java. Isso será
+-- usado pelo eclipse para determinar o que constitui um espaço de trabalho
+local root_markers = {'gradlew', 'mvnw', '.git'}
+local root_dir = require('jdtls.setup').find_root(root_markers)
+
+-- O eclipse.jdt.ls armazena dados específicos do projeto dentro de uma pasta. Se você estiver trabalhando
+-- com vários projetos diferentes, cada projeto deve usar um diretório de dados dedicado.
+-- Essa variável é usada para configurar o eclipse para usar o nome do diretório do
+-- projeto atual encontrado usando o root_marker como a pasta para dados específicos do projeto.
+local workspace_folder = home .. "/.local/share/eclipse/" .. vim.fn.fnamemodify(root_dir, ":p:h:t")
+
+-- Função auxiliar para criar mapeamentos de teclas
+function nnoremap(rhs, lhs, bufopts, desc)
+  bufopts.desc = desc
+  vim.keymap.set("n", rhs, lhs, bufopts)
+end
+
+-- A função on_attach é usada para definir mapeamentos de teclas após o servidor de linguagem
+-- ser anexado ao buffer atual
+local on_attach = function(client, bufnr)
+  -- Mapeamentos de teclas regulares do cliente LSP do Neovim
+  local bufopts = { noremap=true, silent=true, buffer=bufnr }
+  nnoremap('gD', vim.lsp.buf.declaration, bufopts, "Ir para declaração")
+  nnoremap('gd', vim.lsp.buf.definition, bufopts, "Ir para definição")
+  nnoremap('gi', vim.lsp.buf.implementation, bufopts, "Ir para implementação")
+  nnoremap('K', vim.lsp.buf.hover, bufopts, "Texto de hover")
+  nnoremap('<C-k>', vim.lsp.buf.signature_help, bufopts, "Mostrar assinatura")
+  nnoremap('<space>wa', vim.lsp.buf.add_workspace_folder, bufopts, "Adicionar pasta de espaço de trabalho")
+  nnoremap('<space>wr', vim.lsp.buf.remove_workspace_folder, bufopts, "Remover pasta de espaço de trabalho")
+  nnoremap('<space>wl', function()
+    print(vim.inspect(vim.lsp.buf.list_workspace_folders()))
+  end, bufopts, "Listar pastas de espaço de trabalho")
+  nnoremap('<space>D', vim.lsp.buf.type_definition, bufopts, "Ir para definição de tipo")
+  nnoremap('<space>rn', vim.lsp.buf.rename, bufopts, "Renomear")
+  nnoremap('<space>ca', vim.lsp.buf.code_action, bufopts, "Ações de código")
+  vim.keymap.set('v', "<space>ca", "<ESC><CMD>lua vim.lsp.buf.range_code_action()<CR>",
+    { noremap=true, silent=true, buffer=bufnr, desc = "Ações de código" })
+  nnoremap('<space>f', function() vim.lsp.buf.format { async = true } end, bufopts, "Formatar arquivo")
+
+  -- Extensões Java fornecidas pelo jdtls
+  nnoremap("<C-o>", jdtls.organize_imports, bufopts, "Organizar imports")
+  nnoremap("<space>ev", jdtls.extract_variable, bufopts, "Extrair variável")
+  nnoremap("<space>ec", jdtls.extract_constant, bufopts, "Extrair constante")
+  vim.keymap.set('v', "<space>em", [[<ESC><CMD>lua require('jdtls').extract_method(true)<CR>]],
+    { noremap=true, silent=true, buffer=bufnr, desc = "Extrair método" })
+end
+
+local config = {
+  flags = {
+    debounce_text_changes = 80,
+  },
+  on_attach = on_attach,  -- Passamos nossos mapeamentos de teclas on_attach para o mapa de configuração
+  root_dir = root_dir, -- Defina o diretório raiz para o nosso root_marker encontrado
+  -- Aqui você pode configurar configurações específicas do eclipse.jdt.ls
+  -- Essas são definidas pelo projeto eclipse.jdt.ls e serão passadas para o eclipse ao iniciar.
+  -- Veja https://github.com/eclipse/eclipse.jdt.ls/wiki/Running-the-JAVA-LS-server-from-the-command-line#initialize-request
+  -- para uma lista de opções
+  settings = {
+    java = {
+      format = {
+        settings = {
+          -- Use as diretrizes de estilo Java do Google para formatação
+          -- Para usar, certifique-se de baixar o arquivo de https://github.com/google/styleguide/blob/gh-pages/eclipse-java-google-style.xml
+          -- e colocá-lo no diretório ~/.local/share/eclipse
+          url = "/.local/share/eclipse/eclipse-java-google-style.xml",
+          profile = "GoogleStyle",
+        },
+      },
+      signatureHelp = { enabled = true },
+      contentProvider = { preferred = 'fernflower' },  -- Use o fernflower para descompilar código de biblioteca
+      -- Especifique quaisquer opções de conclusão
+      completion = {
+        favoriteStaticMembers = {
+          "org.hamcrest.MatcherAssert.assertThat",
+          "org.hamcrest.Matchers.*",
+          "org.hamcrest.CoreMatchers.*",
+          "org.junit.jupiter.api.Assertions.*",
+          "java.util.Objects.requireNonNull",
+          "java.util.Objects.requireNonNullElse",
+          "org.mockito.Mockito.*"
+        },
+        filteredTypes = {
+          "com.sun.*",
+          "io.micrometer.shaded.*",
+          "java.awt.*",
+          "jdk.*", "sun.*",
+        },
+      },
+      -- Especifique quaisquer opções para organizar imports
+      sources = {
+        organizeImports = {
+          starThreshold = 9999;
+          staticStarThreshold = 9999;
+        },
+      },
+      -- Como a geração de código deve agir
+      codeGeneration = {
+        toString = {
+          template = "${object.className}{${member.name()}=${member.value}, ${otherMembers}}"
+        },
+        hashCodeEquals = {
+          useJava7Objects = true,
+        },
+        useBlocks = true,
+      },
+      -- Se você estiver desenvolvendo em projetos com diferentes versões do Java, você precisa
+      -- informar ao eclipse.jdt.ls para usar a localização do JDK para sua versão do Java
+      -- Veja https://github.com/eclipse/eclipse.jdt.ls/wiki/Running-the-JAVA-LS-server-from-the-command-line#initialize-request
+      -- E procure por `interface RuntimeOption`
+      -- O `name` NÃO é arbitrário, mas deve corresponder a um dos elementos de `enum ExecutionEnvironment` no link acima
+      configuration = {
+        runtimes = {
+          {
+            name = "JavaSE-17",
+            path = "/usr/lib/jvm/java-17-openjdk-amd64/bin/java",
+          },
+        }
+      }
+    }
+  },
+  -- cmd é o comando que inicia o servidor de linguagem. O que quer que seja colocado
+  -- aqui é o que é passado para a linha de comando para executar o jdtls.
+  -- Observe que o eclipse.jdt.ls deve ser iniciado com uma versão do Java 17 ou superior
+  -- Veja: https://github.com/eclipse/eclipse.jdt.ls#running-from-the-command-line
+  -- para a lista completa de opções
+  cmd = {
+     "/usr/lib/jvm/java-17-openjdk-amd64/bin/java",
+    '-Declipse.application=org.eclipse.jdt.ls.core.id1',
+    '-Dosgi.bundles.defaultStartLevel=4',
+    '-Declipse.product=org.eclipse.jdt.ls.core.product',
+    '-Dlog.protocol=true',
+    '-Dlog.level=ALL',
+    '-Xmx4g',
+    '--add-modules=ALL-SYSTEM',
+    '--add-opens', 'java.base/java.util=ALL-UNNAMED',
+    '--add-opens', 'java.base/java.lang=ALL-UNNAMED',
+    -- Se você usar o lombok, baixe o arquivo lombok.jar e coloque-o em ~/.local/share/eclipse
+    '-javaagent:' .. jdtls_home .. 'lombok.jar',
+
+    -- O arquivo jar está localizado onde o jdtls foi instalado. Isso precisará ser atualizado
+    -- para o local onde você instalou o jdtls
+    '-jar', vim.fn.glob(jdtls_home .. 'plugins/org.eclipse.equinox.launcher_*.jar'),
+
+    -- A configuração para jdtls também é colocada onde o jdtls foi instalado. Isso irá
+    -- precisa ser atualizado dependendo do seu ambiente
+    '-configuration', jdtls_home .. '/config_linux',
+
+    -- Use o workspace_folder definido acima para armazenar dados para este projeto
+    '-data', workspace_folder,
+  },
+}
+
+-- Finalmente, inicie o jdtls. Isso executará o servidor de linguagem usando a configuração que especificamos,
+-- configurar os mapeamentos de teclas e anexar o cliente LSP ao buffer atual
+jdtls.start_or_attach(config)
+
