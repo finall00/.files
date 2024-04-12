@@ -1,5 +1,15 @@
 vim.g.base46_cache = vim.fn.stdpath "data" .. "/nvchad/base46/"
 vim.g.mapleader = ";"
+vim.opt.clipboard='unnamedplus'
+vim.opt.autoindent=true
+
+-- Tab
+vim.opt.tabstop = 4                 -- number of visual spaces per TAB
+vim.opt.softtabstop = 4             -- number of spacesin tab when editing
+vim.opt.shiftwidth = 4              -- insert 4 spaces on a tab
+vim.opt.expandtab = true
+
+
 
 -- bootstrap lazy and all plugins
 local lazypath = vim.fn.stdpath "data" .. "/lazy/lazy.nvim"

@@ -2,10 +2,10 @@
 
 SOURCE_DIR_1=~/.config/nvim
 SOURCE_DIR_2=~/.local/share/nvim
-DEST_DIR=~/nvim_bk_$(date +"%Y-%m-%d_%H-%M-%S")
+DEST_DIR=~/nvim_bk_$(date +"%d-%m-%Y")
 
 if [ ! -d "$SOURCE_DIR_1" ] || [ ! -d "$SOURCE_DIR_2" ]; then
-    echo "Diretórios de configuração do Neovim não encontrados."
+    echo -e "\nDiretórios de configuração do Neovim não encontrados."
     exit 1
 fi
 
@@ -17,14 +17,14 @@ perform_backup() {
     cp -r "$SOURCE_DIR_2" "$DEST_DIR/local"
 
     if [ -d "$DEST_DIR" ]; then
-        echo "Backup da configuração do Neovim criado em $DEST_DIR"
+        echo -e "\nBackup da configuração do Neovim criado em $DEST_DIR"
     else
-        echo "Erro ao criar o backup da configuração do Neovim."
+        echo -e "\nErro ao criar o backup da configuração do Neovim."
     fi
 }
 
 restore_default() {
-    echo "Deseja salvar um backup antes de restaurar a configuração padrão? (s/n)"
+    echo -e "\nDeseja salvar um backup antes de restaurar a configuração padrão? (s/n)"
     read choice
 
     if [ "$choice" == "s" ]; then
@@ -34,13 +34,14 @@ restore_default() {
     rm -rf "$SOURCE_DIR_1"
     rm -rf "$SOURCE_DIR_2"
 
-    echo "Configuração padrão do Neovim restaurada com sucesso."
+    echo -e "\nConfiguração padrão do Neovim restaurada com sucesso."
 }
 
 echo "Escolha uma opção:"
 echo "1. Salvar um backup"
-echo "2. Salvar um backup e remover, restaurando a configuração padrão"
-read option
+echo "2. Restaurando a configuração padrão"
+echo "q. Sair"
+read -n 1 -p ">> " option
 
 case $option in
     1)
@@ -48,6 +49,10 @@ case $option in
         ;;
     2)
         restore_default
+        ;;
+    q)
+        echo -e "\nSaindo..."
+        exit 0
         ;;
     *)
         echo "Opção inválida."
